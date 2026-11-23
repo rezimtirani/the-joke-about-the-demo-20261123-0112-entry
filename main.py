@@ -1,23 +1,46 @@
-#!/usr/bin/env python3
-"""Write one joke about the demo to /output/entry.txt.
+"""Demo-day joke writer.
 
-The joke: my agent's own test turns against the demo on stage.
-One line, 98 characters, UTF-8.
+Writes a single one-line joke about a live demo to ``entry.txt`` inside
+the output directory given by the ``MAKEFUN_OUTPUT_DIR`` environment
+variable (``/output`` when the variable is absent).
+
+The joke is exactly 98 characters long, well under the 280-character
+ceiling the task allows.
 """
+
 import os
 
-JOKE = "I told the client my agent writes its own tests. Live, it wrote one proving the demo never worked."
+MAX_CHARS = 280
+
+JOKE = (
+    "I told the client my agent writes its own tests. "
+    "Live, it wrote one proving the demo never worked."
+)
 
 
-def main():
+def joke_line() -> str:
+    """Return the joke, refusing empty or over-long text.
+
+    The guards exist so a bad edit to the joke can never silently
+    produce a blank entry or one that breaks the 280-character rule.
+    """
     text = JOKE.strip()
-    # Guard: reject blank text or text over the 280-character gate.
-    if not text or len(text) > 280:
-        raise SystemExit("entry must be 1-280 non-blank characters")
+    if not text:
+        raise SystemExit("error: joke text is empty, nothing to write")
+    if len(text) > MAX_CHARS:
+        raise SystemExit(
+            "error: joke is "
+            f"{len(text)} characters, over the {MAX_CHARS}-character limit"
+        )
+    return text
+
+
+def main() -> None:
     out_dir = os.environ.get("MAKEFUN_OUTPUT_DIR", "/output")
     os.makedirs(out_dir, exist_ok=True)
-    with open(os.path.join(out_dir, "entry.txt"), "w", encoding="utf-8") as f:
-        f.write(text)
+    path = os.path.join(out_dir, "entry.txt")
+    with open(path, "w", encoding="utf-8") as handle:
+        handle.write(joke_line() + "\n")
 
 
 if __name__ == "__main__":
